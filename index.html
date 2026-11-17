@@ -438,7 +438,7 @@
       state.screen   = `${screen.width}x${screen.height}`;
       state.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
       if (getActivePlatform() === 'PC') {
-        state.connectionType = 'PC network';
+        state.connectionType = '—';   // PCs have no mobile network type
       } else {
         const conn = navigator.connection;
         const typeMap = { '4g': '4G', '3g': '3G', '2g': '2G', 'slow-2g': '2G' };
