@@ -1,0 +1,940 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>MHO Network Check</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Tahoma, sans-serif; background: #f8fafc; color: #0f172a; min-height: 100vh; }
+
+    .header { background: #fff; border-bottom: 1px solid #e2e8f0; padding: 14px 20px; display: flex; justify-content: space-between; align-items: center; gap: 12px; position: sticky; top: 0; z-index: 10; }
+    .header-title { font-weight: 700; font-size: 16px; color: #1e293b; }
+    .header-sub { font-size: 11px; color: #94a3b8; margin-top: 1px; }
+    .lang-select { border: 1px solid #e2e8f0; border-radius: 6px; background: #f8fafc; color: #334155; font-size: 12px; font-weight: 600; padding: 5px 26px 5px 10px; cursor: pointer; appearance: none; background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 12 12'%3E%3Cpath fill='%2364748b' d='M6 8L2 4h8z'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 8px center; background-size: 10px; }
+    .lang-select:focus { outline: none; border-color: #4f46e5; }
+
+    .container { max-width: 600px; margin: 0 auto; padding: 20px 16px; }
+
+    .card { background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 16px; margin-bottom: 14px; }
+    .card-label { font-size: 10px; font-weight: 700; color: #94a3b8; letter-spacing: .08em; margin-bottom: 12px; }
+
+    .data-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .data-cell { background: #f8fafc; border-radius: 8px; padding: 10px; min-width: 0; }
+    .data-cell.full { grid-column: 1 / -1; }
+    .cell-label { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; margin-bottom: 3px; }
+    .cell-value { font-size: 13px; font-weight: 600; color: #0f172a; overflow-wrap: anywhere; }
+    .cell-value.loading { color: #94a3b8; font-weight: 400; font-size: 12px; }
+
+    .mini { margin-top: 10px; display: grid; grid-template-columns: max-content 1fr; gap: 4px 12px; font-size: 12px; }
+    .mini dt { color: #94a3b8; }
+    .mini dd { color: #334155; overflow-wrap: anywhere; }
+
+    .lat-table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    .lat-table th { font-size: 9px; color: #94a3b8; text-transform: uppercase; letter-spacing: .05em; font-weight: 600; }
+    .lat-table th, .lat-table td { padding: 6px 4px; border-bottom: 1px solid #e2e8f0; text-align: start; }
+    .lat-table tr:last-child td { border-bottom: none; }
+    .lat-ref { color: #94a3b8; font-size: 10px; }
+    .measure-status { font-size: 11px; color: #64748b; margin-bottom: 8px; }
+    .udp-row { display: flex; gap: 8px; font-size: 12px; margin-top: 10px; }
+    .udp-row span:first-child { color: #94a3b8; }
+    .warn { color: #d97706; }
+
+    .code-block { background: #1e293b; color: #a5f3fc; border-radius: 8px; padding: 10px 12px; font-family: monospace; font-size: 13px; display: flex; justify-content: space-between; align-items: center; gap: 8px; margin: 8px 0; }
+    .copy-btn { background: #4f46e5; color: #fff; border: none; border-radius: 4px; padding: 3px 10px; font-size: 11px; cursor: pointer; white-space: nowrap; }
+    .copy-btn:active { background: #3730a3; }
+
+    .instructions { list-style: none; margin-bottom: 10px; }
+    .instructions li { font-size: 13px; color: #475569; padding: 3px 0; }
+    .instructions li::before { content: attr(data-n) ". "; font-weight: 600; color: #4f46e5; }
+    kbd { background: #f1f5f9; border: 1px solid #cbd5e1; border-radius: 3px; padding: 1px 5px; font-size: 11px; font-family: monospace; }
+
+    .tracert-server { margin-bottom: 14px; }
+    .tracert-server:last-child { margin-bottom: 0; }
+    .tracert-label { font-size: 11px; font-weight: 600; color: #475569; margin-bottom: 6px; }
+    .paste-area { width: 100%; border: 1.5px dashed #cbd5e1; border-radius: 8px; padding: 10px; min-height: 80px; font-family: monospace; font-size: 11px; color: #475569; resize: vertical; outline: none; }
+    .paste-area:focus { border-color: #4f46e5; border-style: solid; }
+    details.advanced summary { cursor: pointer; font-size: 12px; color: #4f46e5; margin: 8px 0; }
+
+    .retry-btn { background: none; border: 1px solid #cbd5e1; border-radius: 4px; padding: 2px 8px; font-size: 11px; color: #64748b; cursor: pointer; margin-inline-start: 6px; }
+
+    .upload-area { border: 2px dashed #cbd5e1; border-radius: 8px; padding: 20px 16px; text-align: center; margin: 12px 0; }
+    .upload-btn { background: #4f46e5; color: #fff; border: none; border-radius: 6px; padding: 9px 20px; font-size: 13px; font-weight: 600; cursor: pointer; display: inline-block; }
+    .upload-error { font-size: 11px; color: #dc2626; margin-top: 6px; display: none; }
+
+    .issue-label { display: block; font-size: 13px; color: #1e293b; font-weight: 600; margin-bottom: 8px; }
+    .issue-inputs { display: flex; gap: 8px; margin-bottom: 6px; }
+    .issue-input { flex: 1; border: 1.5px solid #e2e8f0; border-radius: 8px; padding: 9px 12px; font-size: 13px; color: #0f172a; outline: none; background: #f8fafc; min-width: 0; }
+    .issue-input:focus { border-color: #4f46e5; background: #fff; }
+    .issue-sublabel { font-size: 11px; color: #94a3b8; }
+    .field { margin-bottom: 16px; }
+    .field-guide { font-size: 12px; color: #64748b; margin-bottom: 8px; line-height: 1.5; }
+    .guide-img { width: 100%; border-radius: 8px; border: 1px solid #e2e8f0; margin-bottom: 8px; }
+    .choice { display: inline-flex; align-items: center; gap: 4px; margin: 0 12px 6px 0; font-size: 13px; color: #334155; }
+    [dir="rtl"] .choice { margin: 0 0 6px 12px; }
+
+    .disclaimer { background: #fefce8; border: 1px solid #fde047; border-radius: 8px; padding: 12px; font-size: 12px; color: #713f12; line-height: 1.6; margin-bottom: 12px; }
+    .btn-submit { width: 100%; background: #4f46e5; color: #fff; border: none; border-radius: 8px; padding: 13px; font-size: 14px; font-weight: 700; cursor: pointer; }
+    .btn-submit:hover:not(:disabled) { background: #4338ca; }
+    .btn-submit:disabled { cursor: default; background: #94a3b8; }
+    .btn-submit.done { background: #059669; }
+    .submit-error { margin-top: 8px; font-size: 12px; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 8px 10px; display: none; }
+
+    /* IPs, commands and pasted output must never be mirrored in Arabic */
+    .ltr { direction: ltr; unicode-bidi: isolate; text-align: left; }
+
+    @media (max-width: 400px) {
+      .issue-inputs { flex-direction: column; }
+      .data-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+  <header class="header">
+    <div>
+      <div class="header-title" id="header-game">Monster Hunter Outlanders</div>
+      <div class="header-sub" data-i18n="headerSub">Network Check</div>
+    </div>
+    <select class="lang-select" id="lang-select" onchange="setLang(this.value)">
+      <option value="en">English</option>
+      <option value="zh">繁體中文</option>
+      <option value="vi">Tiếng Việt</option>
+      <option value="th">ไทย</option>
+      <option value="id">Bahasa Indonesia</option>
+      <option value="es">Español</option>
+      <option value="ko">한국어</option>
+      <option value="pt">Português</option>
+      <option value="ar">العربية</option>
+    </select>
+  </header>
+
+  <div class="container">
+
+    <!-- Step 1: identity -->
+    <div class="card">
+      <div class="card-label" data-i18n="step1Label"></div>
+      <div class="data-grid">
+        <div class="data-cell">
+          <div class="cell-label" data-i18n="yourIP"></div>
+          <div class="cell-value loading ltr" id="val-ip">…</div>
+        </div>
+        <div class="data-cell">
+          <div class="cell-label" data-i18n="yourISP"></div>
+          <div class="cell-value loading" id="val-isp">…</div>
+        </div>
+        <div class="data-cell">
+          <div class="cell-label" data-i18n="asnLabel"></div>
+          <div class="cell-value loading ltr" id="val-asn">…</div>
+        </div>
+        <div class="data-cell">
+          <div class="cell-label" data-i18n="prefixLabel"></div>
+          <div class="cell-value loading ltr" id="val-prefix">…</div>
+        </div>
+        <div class="data-cell full">
+          <div class="cell-label" data-i18n="locationLabel"></div>
+          <div class="cell-value loading" id="val-location">…</div>
+        </div>
+      </div>
+      <dl class="mini">
+        <dt data-i18n="rdnsLabel"></dt><dd class="ltr" id="val-rdns">…</dd>
+        <dt data-i18n="coloLabel"></dt><dd class="ltr" id="val-colo">…</dd>
+        <dt data-i18n="egressLabel"></dt><dd id="val-egress">…</dd>
+        <dt data-i18n="deviceOS"></dt><dd id="val-os">—</dd>
+        <dt data-i18n="timezoneLabel"></dt><dd class="ltr" id="val-timezone">—</dd>
+        <dt class="connection-cell" data-i18n="connectionType"></dt><dd class="connection-cell" id="val-connection">—</dd>
+      </dl>
+    </div>
+
+    <!-- Step 2: automatic measurements -->
+    <div class="card">
+      <div class="card-label" data-i18n="step2Label"></div>
+      <div class="measure-status" id="measure-status"></div>
+      <table class="lat-table">
+        <thead>
+          <tr>
+            <th data-i18n="latRegion"></th>
+            <th data-i18n="latMedian"></th>
+            <th data-i18n="latJitter"></th>
+            <th data-i18n="latLoss"></th>
+          </tr>
+        </thead>
+        <tbody id="lat-body"></tbody>
+      </table>
+      <div class="udp-row"><span data-i18n="udpLabel"></span><span id="val-udp">…</span></div>
+    </div>
+
+    <!-- Step 3: traceroute -->
+    <div class="card">
+      <div class="card-label" data-i18n="step3Label"></div>
+      <div id="step3-content"></div>
+    </div>
+
+    <!-- Step 4: issue details -->
+    <div class="card">
+      <div class="card-label" data-i18n="step4Label"></div>
+
+      <div class="field">
+        <label class="issue-label" for="roleid-input" data-i18n="roleIdLabel"></label>
+        <div class="field-guide" data-i18n="roleIdGuide"></div>
+        <img class="guide-img" src="img/roleid.jpg" alt="" data-i18n-alt="roleIdImgCaption">
+        <input type="text" id="roleid-input" class="issue-input ltr" style="width:100%" maxlength="100"
+               data-i18n-placeholder="roleIdPlaceholder" oninput="this.value=sanitizeText(this.value,100)">
+      </div>
+
+      <div class="field">
+        <label class="issue-label" for="nickname-input" data-i18n="nicknameLabel"></label>
+        <input type="text" id="nickname-input" class="issue-input" style="width:100%;margin-bottom:4px" maxlength="50"
+               data-i18n-placeholder="nicknamePlaceholder" oninput="this.value=sanitizeText(this.value,50)">
+        <div class="issue-sublabel" data-i18n="nicknameGuide"></div>
+      </div>
+
+      <div class="field">
+        <span class="issue-label" data-i18n="networkTypeLabel"></span>
+        <label class="choice"><input type="radio" name="networkType" value="wired"><span data-i18n="netWired"></span></label>
+        <label class="choice"><input type="radio" name="networkType" value="wifi"><span data-i18n="netWifi"></span></label>
+        <label class="choice"><input type="radio" name="networkType" value="mobile"><span data-i18n="netMobile"></span></label>
+      </div>
+
+      <div class="field">
+        <span class="issue-label" data-i18n="vpnLabel"></span>
+        <label class="choice"><input type="radio" name="vpn" value="yes"><span data-i18n="vpnYes"></span></label>
+        <label class="choice"><input type="radio" name="vpn" value="no"><span data-i18n="vpnNo"></span></label>
+        <label class="choice"><input type="radio" name="vpn" value="unsure"><span data-i18n="vpnUnsure"></span></label>
+      </div>
+
+      <div class="field">
+        <span class="issue-label" data-i18n="issueTypeLabel"></span>
+        <label class="choice"><input type="checkbox" name="issueType" value="high_latency"><span data-i18n="typeHighLatency"></span></label>
+        <label class="choice"><input type="checkbox" name="issueType" value="lag_spike"><span data-i18n="typeLagSpike"></span></label>
+        <label class="choice"><input type="checkbox" name="issueType" value="disconnect"><span data-i18n="typeDisconnect"></span></label>
+        <label class="choice"><input type="checkbox" name="issueType" value="login_fail"><span data-i18n="typeLoginFail"></span></label>
+        <label class="choice"><input type="checkbox" name="issueType" value="slow_download"><span data-i18n="typeSlowDownload"></span></label>
+      </div>
+
+      <div class="field">
+        <label class="issue-label" for="ingame-ping" data-i18n="ingamePingLabel"></label>
+        <input type="number" id="ingame-ping" class="issue-input ltr" style="width:100%" min="0" max="10000" step="1"
+               data-i18n-placeholder="ingamePingPlaceholder">
+      </div>
+
+      <div class="field">
+        <span class="issue-label" data-i18n="patternLabel"></span>
+        <label class="choice"><input type="radio" name="issuePattern" value="constant"><span data-i18n="patternConstant"></span></label>
+        <label class="choice"><input type="radio" name="issuePattern" value="specific_hours"><span data-i18n="patternSpecificHours"></span></label>
+        <label class="choice"><input type="radio" name="issuePattern" value="occasional"><span data-i18n="patternOccasional"></span></label>
+      </div>
+
+      <div class="field">
+        <label class="issue-label" data-i18n="issueTimeLabel"></label>
+        <div class="issue-inputs">
+          <input type="date" id="issue-date" class="issue-input">
+          <input type="time" id="issue-time" class="issue-input">
+        </div>
+        <div class="issue-sublabel" data-i18n="issueTimeSub"></div>
+      </div>
+    </div>
+
+    <!-- Step 5: submit -->
+    <div class="card">
+      <div class="card-label" data-i18n="step5Label"></div>
+      <div class="disclaimer" data-i18n="disclaimerText"></div>
+      <button class="btn-submit" id="submit-btn" onclick="submitReport()"></button>
+      <div class="submit-error" id="submit-error"></div>
+    </div>
+
+  </div>
+
+  <script src="i18n.js"></script>
+  <script>
+    // ── CONFIG ────────────────────────────────────────────────────────────────
+    const CONFIG = {
+      game: 'Monster Hunter Outlanders',
+      appsScriptUrl: '',
+    };
+
+    // Tencent Cloud COS endpoints in the same cities as the game servers.
+    // Johor has no public endpoint, so Singapore stands in for it.
+    const LATENCY_TARGETS = [
+      { key: 'SG',  url: 'https://cos.ap-singapore.myqcloud.com/' },
+      { key: 'FRA', url: 'https://cos.eu-frankfurt.myqcloud.com/' },
+      { key: 'SAO', url: 'https://cos.sa-saopaulo.myqcloud.com/' },
+      { key: 'QRO', url: 'https://cos.na-queretaro.myqcloud.com/' },
+      { key: 'SEL', url: 'https://cos.ap-seoul.myqcloud.com/', reference: true },
+    ];
+
+    // ── i18n ──────────────────────────────────────────────────────────────────
+    let currentLang = 'en';
+
+    function t(key) {
+      return (I18N[currentLang] && I18N[currentLang][key]) || I18N.en[key] || key;
+    }
+
+    function detectLang() {
+      const prefs = (navigator.languages && navigator.languages.length)
+        ? navigator.languages
+        : [navigator.language || 'en'];
+      for (const pref of prefs) {
+        const code = pref.toLowerCase();
+        if (code.startsWith('vi')) return 'vi';
+        if (code.startsWith('th')) return 'th';
+        if (code.startsWith('id') || code.startsWith('in')) return 'id';  // 'in' = legacy Indonesian code
+        if (code.startsWith('es')) return 'es';
+        if (code.startsWith('ko')) return 'ko';
+        if (code.startsWith('pt')) return 'pt';
+        if (code.startsWith('ar')) return 'ar';
+        if (code.startsWith('zh-tw') || code.startsWith('zh-hk') || code.startsWith('zh-hant')) return 'zh';
+      }
+      return 'en';
+    }
+
+    function setLang(lang) {
+      currentLang = I18N[lang] ? lang : 'en';
+      document.documentElement.lang = currentLang;
+      document.documentElement.dir  = currentLang === 'ar' ? 'rtl' : 'ltr';
+      document.getElementById('lang-select').value = currentLang;
+      document.querySelectorAll('[data-i18n]').forEach(el => { el.innerHTML = t(el.dataset.i18n); });
+      document.querySelectorAll('[data-i18n-placeholder]').forEach(el => { el.placeholder = t(el.dataset.i18nPlaceholder); });
+      document.querySelectorAll('[data-i18n-alt]').forEach(el => { el.alt = t(el.dataset.i18nAlt); });
+      renderIdentity();
+      renderLatency();
+      renderUdp();
+      renderStep3();
+      renderSubmit();
+    }
+
+    // ── State ─────────────────────────────────────────────────────────────────
+    const state = {
+      identity: 'loading',
+      ip: null, isp: '', asn: '', prefix: '', city: '', countryCode: '',
+      rdns: '', egressIps: [], cfColo: '', warp: '',
+      os: null, browser: null, screen: null, timezone: null, connectionType: null,
+      deviceMemory: null, cpuCores: null,
+      latency: {}, udpNat: null, measuring: false,
+      serversLoaded: false, serversFailed: false, matchedServers: [], region: 'Other',
+      traces: {}, pathpings: {}, screenshots: [],
+      submitted: false,
+    };
+    let identityReady = Promise.resolve();
+
+    function sanitizeText(val, maxLen) {
+      return val.replace(/[<>'"&\\;(){}[\]]/g, '').slice(0, maxLen);
+    }
+
+    function esc(s) {
+      return String(s).replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
+    }
+
+    // ── Pure helpers ──────────────────────────────────────────────────────────
+    function latencyStats(samples) {
+      const ok = samples.filter(x => typeof x === 'number');
+      const loss = Math.round((samples.length - ok.length) / samples.length * 100);
+      if (!ok.length) return { median: null, jitter: null, loss };
+      const sorted = ok.slice().sort((a, b) => a - b);
+      const mid = sorted.length >> 1;
+      const median = Math.round(sorted.length % 2 ? sorted[mid] : (sorted[mid - 1] + sorted[mid]) / 2);
+      let jitter = null;
+      if (ok.length > 1) {
+        let sum = 0;
+        for (let i = 1; i < ok.length; i++) sum += Math.abs(ok[i] - ok[i - 1]);
+        jitter = Math.round(sum / (ok.length - 1));
+      }
+      return { median, jitter, loss };
+    }
+
+    // Browsers merge identical candidates, so a single mapping is reported as cone
+    function classifyNat(cands) {
+      const v4 = cands.filter(c => /^\d{1,3}(\.\d{1,3}){3}$/.test(c.ip));
+      if (!v4.length) return 'blocked';
+      const byBase = {};
+      v4.forEach(c => { (byBase[c.relPort] = byBase[c.relPort] || new Set()).add(c.port); });
+      return Object.values(byBase).some(ports => ports.size > 1) ? 'symmetric' : 'cone';
+    }
+
+    function resolveServers(countryCode, all) {
+      if (!Array.isArray(all)) return { servers: [], region: 'Other', failed: true };
+      const toServer = s => ({ label: s.name, ip: s.ip });
+      const code = String(countryCode || '').toUpperCase();
+      const matched = code ? all.filter(s => s.countries.includes(code)) : [];
+      if (matched.length) return { servers: matched.map(toServer), region: matched[0].region };
+      return { servers: all.filter(s => s.countries.includes('*')).map(toServer), region: 'Other' };
+    }
+
+    function parseCfTrace(text) {
+      const out = {};
+      String(text || '').split('\n').forEach(line => {
+        const i = line.indexOf('=');
+        if (i > 0) out[line.slice(0, i).trim()] = line.slice(i + 1).trim();
+      });
+      return out;
+    }
+
+    function extractIspInfo(source, d) {
+      if (!d) return null;
+      if (source === 'ipwho') {
+        if (!d.success || !d.connection) return null;
+        return {
+          isp: d.connection.isp || d.connection.org || '',
+          asn: d.connection.asn ? 'AS' + d.connection.asn : '',
+          city: d.city || '', countryCode: (d.country_code || '').toUpperCase(),
+        };
+      }
+      if (source === 'ipinfo') {
+        if (!d.org) return null;
+        const m = /^(AS\d+)\s*(.*)$/.exec(d.org);
+        return {
+          isp: m ? m[2] : d.org, asn: m ? m[1] : '',
+          city: d.city || '', countryCode: (d.country || '').toUpperCase(),
+        };
+      }
+      if (source === 'ipapi') {
+        const asnText = typeof d.asn === 'string' ? d.asn
+          : (d.asn && d.asn.asn ? 'AS' + d.asn.asn + ' ' + (d.asn.org || '') : '');
+        const m = /^(AS\d+)\s*(.*)$/.exec(asnText);
+        if (!m) return null;
+        return { isp: m[2], asn: m[1], city: d.city || '', countryCode: '' };
+      }
+      return null;
+    }
+
+    function ptrName(ip) {
+      const p = String(ip).split('.');
+      return p.length === 4 ? p.reverse().join('.') + '.in-addr.arpa' : null;
+    }
+
+    function issueTimeUtc(d, ti) {
+      if (!d || !ti) return '';
+      const at = new Date(`${d}T${ti}`);
+      return isNaN(at) ? '' : at.toISOString().slice(0, 16) + 'Z';
+    }
+
+    // ── Device info ───────────────────────────────────────────────────────────
+    function detectOS() {
+      const ua = navigator.userAgent;
+      if (/iPhone|iPad/i.test(ua)) return 'iOS';   // before macOS — iOS UA contains "Mac OS X"
+      if (/Android/i.test(ua)) return 'Android';
+      if (/Windows/i.test(ua)) return 'Windows';
+      if (/Macintosh|Mac OS X/i.test(ua)) return 'macOS';
+      if (/Linux/i.test(ua)) return 'Linux';
+      return 'Unknown';
+    }
+
+    function detectBrowser() {
+      const ua = navigator.userAgent;
+      if (/Edg\//i.test(ua)) return 'Edge';
+      if (/Chrome\//i.test(ua)) return 'Chrome';
+      if (/Firefox\//i.test(ua)) return 'Firefox';
+      if (/Safari\//i.test(ua)) return 'Safari';
+      return 'Browser';
+    }
+
+    function getActivePlatform() {
+      return (state.os === 'iOS' || state.os === 'Android') ? state.os : 'PC';
+    }
+
+    function collectDeviceInfo() {
+      state.os       = detectOS();
+      state.browser  = detectBrowser();
+      state.screen   = `${screen.width}x${screen.height}`;
+      state.timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+      if (getActivePlatform() === 'PC') {
+        state.connectionType = 'PC network';
+      } else {
+        const conn = navigator.connection;
+        const typeMap = { '4g': '4G', '3g': '3G', '2g': '2G', 'slow-2g': '2G' };
+        state.connectionType = conn ? (typeMap[conn.effectiveType] || conn.effectiveType || '—') : '—';
+      }
+      state.deviceMemory = navigator.deviceMemory ? `${navigator.deviceMemory} GB` : '—';
+      state.cpuCores     = navigator.hardwareConcurrency || '—';
+    }
+
+    // ── Network collection ────────────────────────────────────────────────────
+    async function fetchWithTimeout(url, ms, opts = {}) {
+      const ctrl = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), ms);
+      try { return await fetch(url, { ...opts, signal: ctrl.signal }); }
+      finally { clearTimeout(timer); }
+    }
+    const getJson = (url, ms = 5000) => fetchWithTimeout(url, ms).then(r => r.json()).catch(() => null);
+    const getText = (url, ms = 5000) => fetchWithTimeout(url, ms).then(r => r.text()).catch(() => null);
+
+    async function detectIdentity() {
+      state.identity = 'loading';
+      renderIdentity();
+      const ipify = await getJson('https://api4.ipify.org?format=json', 8000);
+      state.ip = ipify && ipify.ip || null;
+      if (!state.ip) {
+        state.identity = 'failed';
+        renderIdentity();
+        return;
+      }
+      renderIdentity();
+
+      const [isp, ripe, ptr, cf1, cf2] = await Promise.all([
+        (async () =>
+          extractIspInfo('ipwho',  await getJson(`https://ipwho.is/${state.ip}`)) ||
+          extractIspInfo('ipinfo', await getJson(`https://ipinfo.io/${state.ip}/json`)) ||
+          extractIspInfo('ipapi',  await getJson(`https://api.ipapi.is/?q=${state.ip}`)))(),
+        getJson(`https://stat.ripe.net/data/network-info/data.json?resource=${state.ip}`),
+        ptrName(state.ip) ? getJson(`https://dns.google/resolve?name=${ptrName(state.ip)}&type=PTR`) : null,
+        getText('https://1.1.1.1/cdn-cgi/trace'),
+        getText('https://www.cloudflare.com/cdn-cgi/trace'),
+      ]);
+
+      const t1 = parseCfTrace(cf1), t2 = parseCfTrace(cf2);
+      const ripeData = ripe && ripe.data || {};
+      state.isp         = isp && isp.isp || '';
+      state.asn         = isp && isp.asn || (ripeData.asns && ripeData.asns[0] ? 'AS' + ripeData.asns[0] : '');
+      state.city        = isp && isp.city || '';
+      state.countryCode = isp && isp.countryCode || t1.loc || t2.loc || '';
+      state.prefix      = ripeData.prefix || '';
+      const ans = ptr && Array.isArray(ptr.Answer) ? ptr.Answer.find(a => a.type === 12) : null;
+      state.rdns        = ans ? ans.data.replace(/\.$/, '') : '';
+      state.egressIps   = [...new Set([state.ip, t1.ip, t2.ip].filter(Boolean))];
+      state.cfColo      = t1.colo || t2.colo || '';
+      state.warp        = [t1.warp, t2.warp].some(w => w && w !== 'off') ? 'on' : (t1.warp || t2.warp ? 'off' : '');
+      state.identity    = 'done';
+      renderIdentity();
+    }
+
+    async function timeOnce(url) {
+      const t0 = performance.now();
+      try {
+        await fetchWithTimeout(`${url}?r=${Math.random().toString(36).slice(2)}`, 3000, { mode: 'no-cors', cache: 'no-store' });
+        return Math.round(performance.now() - t0);
+      } catch { return null; }
+    }
+
+    async function measureLatency() {
+      for (const target of LATENCY_TARGETS) {
+        await timeOnce(target.url);            // warm-up: DNS + TLS
+        const samples = [];
+        for (let i = 0; i < 10; i++) samples.push(await timeOnce(target.url));
+        state.latency[target.key] = latencyStats(samples);
+        renderLatency();
+      }
+    }
+
+    function probeUdp(timeoutMs = 5000) {
+      return new Promise(resolve => {
+        if (typeof RTCPeerConnection === 'undefined') return resolve('');
+        let pc, done = false;
+        const cands = [];
+        const finish = () => {
+          if (done) return;
+          done = true;
+          clearTimeout(timer);
+          try { pc.close(); } catch {}
+          resolve(classifyNat(cands));
+        };
+        const timer = setTimeout(finish, timeoutMs);
+        try {
+          pc = new RTCPeerConnection({ iceServers: [
+            { urls: 'stun:stun.l.google.com:19302' },
+            { urls: 'stun:stun.cloudflare.com:3478' },
+          ] });
+        } catch { clearTimeout(timer); return resolve(''); }
+        pc.onicecandidate = e => {
+          if (!e.candidate) return finish();
+          const line = e.candidate.candidate;
+          if (!/ typ srflx/.test(line)) return;     // host candidates (LAN IPs) are never read
+          const f = line.split(' ');
+          const rport = / rport (\d+)/.exec(line);
+          cands.push({ ip: f[4], port: Number(f[5]), relPort: rport ? Number(rport[1]) : 0 });
+        };
+        pc.createDataChannel('probe');
+        pc.createOffer().then(o => pc.setLocalDescription(o)).catch(finish);
+      });
+    }
+
+    async function runAutoChecks() {
+      state.measuring = true;
+      renderSubmit();
+      renderLatency();
+      identityReady = detectIdentity();
+      const work = (async () => {
+        const [, udp] = await Promise.all([identityReady, probeUdp()]);
+        state.udpNat = udp;
+        renderUdp();
+        await measureLatency();
+      })();
+      await Promise.race([work, new Promise(r => setTimeout(r, 30000))]);
+      state.measuring = false;
+      renderSubmit();
+      renderLatency();
+    }
+
+    function retryIdentity() {
+      identityReady = detectIdentity();
+      loadServers();
+    }
+
+    // ── Server list ───────────────────────────────────────────────────────────
+    async function fetchServerConfig() {
+      if (!CONFIG.appsScriptUrl) return null;
+      try {
+        const res  = await fetchWithTimeout(CONFIG.appsScriptUrl, 8000, { redirect: 'follow' });
+        const data = await res.json();
+        return Array.isArray(data) ? data : null;
+      } catch {
+        return null;
+      }
+    }
+
+    async function loadServers() {
+      state.serversLoaded = false;
+      renderStep3();
+      const [config] = await Promise.all([fetchServerConfig(), identityReady]);
+      const r = resolveServers(state.countryCode, config);
+      state.matchedServers = r.servers.filter(s => /^[0-9a-fA-F:.]{2,45}$/.test(s.ip));
+      state.region         = r.region;
+      state.serversFailed  = !!r.failed;
+      state.serversLoaded  = true;
+      renderStep3();
+    }
+
+    // ── Rendering ─────────────────────────────────────────────────────────────
+    function setVal(id, text, cls = '') {
+      const el = document.getElementById(id);
+      el.textContent = text;
+      el.classList.toggle('loading', cls === 'loading');
+      el.classList.toggle('warn', cls === 'warn');
+    }
+
+    function renderIdentity() {
+      const loading = state.identity === 'loading';
+      const show = v => loading ? '…' : (v || '—');
+      const cls  = loading ? 'loading' : '';
+
+      if (state.identity === 'failed') {
+        document.getElementById('val-ip').innerHTML =
+          `<span style="color:#dc2626;font-size:11px">${t('failed')}</span>` +
+          `<button class="retry-btn" onclick="retryIdentity()">↺</button>`;
+      } else {
+        setVal('val-ip', state.ip || '…', state.ip ? '' : 'loading');
+      }
+      setVal('val-isp', show(state.isp), cls);
+      setVal('val-asn', show(state.asn), cls);
+      setVal('val-prefix', show(state.prefix), cls);
+      setVal('val-location', show([state.city, state.countryCode].filter(Boolean).join(', ')), cls);
+      setVal('val-rdns', show(state.rdns), cls);
+      setVal('val-colo', show(state.cfColo), cls);
+
+      const egress = document.getElementById('val-egress');
+      if (loading) {
+        setVal('val-egress', '…', 'loading');
+      } else if (state.egressIps.length > 1) {
+        egress.innerHTML = `${esc(t('egressMulti'))}: <span class="ltr">${state.egressIps.map(esc).join(', ')}</span>`;
+        egress.classList.add('warn');
+      } else {
+        setVal('val-egress', state.egressIps.length ? t('egressSingle') : '—');
+      }
+      if (!loading && state.warp === 'on') {
+        egress.insertAdjacentHTML('beforeend', ` <span class="warn">· ${esc(t('warpOn'))}</span>`);
+      }
+
+      setVal('val-os', `${state.os || '—'} / ${state.browser || '—'}`);
+      setVal('val-timezone', state.timezone || '—');
+      const isPC = getActivePlatform() === 'PC';
+      document.querySelectorAll('.connection-cell').forEach(el => { el.style.display = isPC ? 'none' : ''; });
+      setVal('val-connection', state.connectionType || '—');
+    }
+
+    function renderLatency() {
+      document.getElementById('measure-status').textContent = state.measuring ? t('measuring') : t('measureDone');
+      document.getElementById('lat-body').innerHTML = LATENCY_TARGETS.map(tg => {
+        const r = state.latency[tg.key];
+        const name = esc(t('region' + tg.key)) + (tg.reference ? ` <span class="lat-ref">${esc(t('refTag'))}</span>` : '');
+        let cells;
+        if (!r) cells = ['…', '…', '…'];
+        else if (r.median === null) cells = [esc(t('timeout')), '—', `${r.loss}%`];
+        else cells = [`${r.median} ms`, r.jitter === null ? '—' : `${r.jitter} ms`, `${r.loss}%`];
+        const lossCls = r && r.loss > 0 ? ' warn' : '';
+        return `<tr id="lat-row-${tg.key}"><td>${name}</td>` +
+          `<td class="lat-median ltr">${cells[0]}</td><td class="lat-jitter ltr">${cells[1]}</td>` +
+          `<td class="lat-loss ltr${lossCls}">${cells[2]}</td></tr>`;
+      }).join('');
+    }
+
+    function renderUdp() {
+      const labels = { cone: 'udpCone', symmetric: 'udpSymmetric', blocked: 'udpBlocked', '': 'udpUnsupported' };
+      const el = document.getElementById('val-udp');
+      el.textContent = state.udpNat === null ? '…' : t(labels[state.udpNat]);
+      el.classList.toggle('warn', state.udpNat === 'blocked' || state.udpNat === 'symmetric');
+    }
+
+    function renderStep3() {
+      const content = document.getElementById('step3-content');
+
+      if (!state.serversLoaded) {
+        content.innerHTML = `<div class="field-guide">${t('serversLoading')}</div>`;
+        return;
+      }
+      if (state.serversFailed || !state.matchedServers.length) {
+        content.innerHTML = `<div class="field-guide warn">${t(state.serversFailed ? 'serversFailed' : 'serversNone')}` +
+          (state.serversFailed ? `<button class="retry-btn" onclick="loadServers()">${esc(t('retryBtn'))}</button>` : '') +
+          `</div>`;
+        return;
+      }
+
+      const active = getActivePlatform();
+      if (active === 'PC') {
+        const isWin  = !['macOS', 'Linux'].includes(state.os);
+        const prefix = isWin ? 'tracert -d' : 'traceroute -n';
+        const instrHtml = `
+          <ol class="instructions">
+            <li data-n="1">${t(isWin ? 'traceInstr1Win' : 'traceInstr1Mac')}</li>
+            <li data-n="2">${t('traceInstr2')}</li>
+          </ol>`;
+
+        const serversHtml = state.matchedServers.map(srv => {
+          const id  = srv.ip.replace(/[.:]/g, '-');
+          const cmd = `${prefix} ${srv.ip}`;
+          const pp  = `pathping -n ${srv.ip}`;
+          const advanced = !isWin ? '' : `
+            <details class="advanced">
+              <summary>${t('advancedToggle')}</summary>
+              <div class="field-guide">${t('pathpingInstr')}</div>
+              <div class="code-block ltr"><span>${pp}</span><button class="copy-btn" onclick="copyCmd('${pp}', this)">Copy</button></div>
+              <textarea class="paste-area ltr" id="pathping-${id}" maxlength="20000"
+                placeholder="${esc(t('pastePlaceholder'))}" oninput="state.pathpings['${srv.ip}'] = this.value"></textarea>
+            </details>`;
+          return `
+            <div class="tracert-server">
+              <div class="tracert-label">${esc(srv.label)} — <span class="ltr">${srv.ip}</span></div>
+              <div class="code-block ltr"><span>${cmd}</span><button class="copy-btn" onclick="copyCmd('${cmd}', this)">Copy</button></div>
+              <div class="field-guide">${t('traceInstr3')}</div>
+              <div class="field-guide warn">${t('traceHint')}</div>
+              <textarea class="paste-area ltr" id="trace-${id}" maxlength="20000"
+                placeholder="${esc(t('pastePlaceholder'))}" oninput="state.traces['${srv.ip}'] = this.value"></textarea>
+              ${advanced}
+            </div>`;
+        }).join('');
+
+        content.innerHTML = instrHtml + serversHtml;
+        state.matchedServers.forEach(srv => {
+          const id = srv.ip.replace(/[.:]/g, '-');
+          const tr = document.getElementById(`trace-${id}`);
+          const pp = document.getElementById(`pathping-${id}`);
+          if (tr && state.traces[srv.ip]) tr.value = state.traces[srv.ip];
+          if (pp && state.pathpings[srv.ip]) pp.value = state.pathpings[srv.ip];
+        });
+        return;
+      }
+
+      const isIOS    = active === 'iOS';
+      const steps    = isIOS
+        ? ['iosStep1', 'iosStep2', 'iosStep3', 'iosStep4', 'iosStep5']
+        : ['androidStep1', 'androidStep2', 'androidStep3', 'androidStep4', 'androidStep5'];
+      const storeUrl = isIOS
+        ? 'https://apps.apple.com/app/network-analyzer/id562315041'
+        : 'https://play.google.com/store/apps/details?id=net.techet.netanalyzerlite.an';
+
+      const stepsHtml = steps.map((key, i) =>
+        `<li data-n="${i + 1}"${i === 3 ? ' class="warn"' : ''}>${t(key)}</li>`).join('');
+      const ipsHtml = state.matchedServers.map(srv => `
+        <div style="display:flex;align-items:center;gap:8px;margin-bottom:6px">
+          <span style="font-size:10px;font-weight:700;color:#94a3b8">${esc(srv.label)}</span>
+          <span class="ltr" style="font-family:monospace;font-size:13px;color:#0f172a;flex:1">${srv.ip}</span>
+          <button class="copy-btn" onclick="copyCmd('${srv.ip}', this)">Copy</button>
+        </div>`).join('');
+      const previewHtml = state.screenshots.map(s =>
+        `<img src="data:${esc(s.mimeType)};base64,${s.data}" style="max-height:120px;border-radius:6px;object-fit:contain" alt="${esc(t('uploadPreviewAlt'))}">`).join('');
+
+      content.innerHTML = `
+        <ol class="instructions">${stepsHtml}</ol>
+        <div style="background:#f8fafc;border-radius:8px;padding:10px;margin-bottom:12px">
+          <div class="cell-label" style="margin-bottom:8px">${t(isIOS ? 'iosIPsLabel' : 'androidIPsLabel')}</div>
+          ${ipsHtml}
+        </div>
+        <a href="${storeUrl}" target="_blank" rel="noopener"
+           style="display:block;background:#4f46e5;color:#fff;text-align:center;border-radius:8px;padding:10px;font-size:13px;font-weight:600;text-decoration:none;margin-bottom:12px">
+          ${t(isIOS ? 'iosAppStoreBtn' : 'androidPlayBtn')}
+        </a>
+        <div class="upload-area">
+          <label class="upload-btn" for="screenshot-input">${t('uploadScreenshot')}</label>
+          <input type="file" id="screenshot-input" accept="image/*" multiple style="display:none"
+                 onchange="handleScreenshotUpload(this)">
+          <div class="upload-error" id="upload-error"></div>
+          <div id="upload-preview-container" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:10px">${previewHtml}</div>
+        </div>`;
+    }
+
+    function renderSubmit() {
+      const btn = document.getElementById('submit-btn');
+      if (state.submitted) return;
+      btn.disabled    = state.measuring;
+      btn.textContent = t(state.measuring ? 'measuringBtn' : 'submitBtn');
+    }
+
+    // ── Clipboard / upload ────────────────────────────────────────────────────
+    function copyCmd(text, btn) {
+      const flash = label => {
+        btn.dataset.label = btn.dataset.label || btn.textContent;
+        btn.textContent = label;
+        setTimeout(() => { btn.textContent = btn.dataset.label; }, 1500);
+      };
+
+      // Last resort: select the command so the player can copy it by hand
+      const selectCmd = () => {
+        const span = btn.parentElement.querySelector('span');
+        if (!span) return;
+        const range = document.createRange();
+        range.selectNodeContents(span);
+        const sel = window.getSelection();
+        sel.removeAllRanges();
+        sel.addRange(range);
+      };
+
+      const legacyCopy = () => {
+        const ta = document.createElement('textarea');
+        ta.value = text;
+        ta.setAttribute('readonly', '');
+        ta.style.cssText = 'position:fixed;top:0;left:0;width:1px;height:1px;opacity:0';
+        document.body.appendChild(ta);
+        ta.select();
+        ta.setSelectionRange(0, text.length);
+        let ok = false;
+        try { ok = document.execCommand('copy'); } catch (e) { ok = false; }
+        document.body.removeChild(ta);
+        if (ok) { flash('✓'); } else { selectCmd(); flash('⌘C'); }
+      };
+
+      // navigator.clipboard is undefined outside a secure context — that throws
+      // synchronously, so it cannot be caught by .catch() on the promise
+      try {
+        navigator.clipboard.writeText(text).then(() => flash('✓'), legacyCopy);
+      } catch (e) {
+        legacyCopy();
+      }
+    }
+
+    function handleScreenshotUpload(input) {
+      const files = Array.from(input.files);
+      if (!files.length) return;
+
+      const errEl = document.getElementById('upload-error');
+      if (files.length > 4) {
+        errEl.textContent = t('uploadCountError');
+        errEl.style.display = 'block';
+        input.value = '';
+        return;
+      }
+      if (files.some(f => f.size > 5 * 1024 * 1024)) {
+        errEl.textContent = t('uploadSizeError');
+        errEl.style.display = 'block';
+        input.value = '';
+        return;
+      }
+      errEl.style.display = 'none';
+
+      Promise.all(files.map(file => new Promise(resolve => {
+        const reader = new FileReader();
+        reader.onload = e => resolve({ data: e.target.result.split(',')[1], mimeType: file.type });
+        reader.readAsDataURL(file);
+      }))).then(results => {
+        state.screenshots = results;
+        renderStep3();
+      });
+    }
+
+    // ── Issue time ────────────────────────────────────────────────────────────
+    // The player enters the time in their own local timezone — tag it so the
+    // Issue Time column can be lined up against the Asia/Taipei submission time
+    function buildIssueTime() {
+      const d  = document.getElementById('issue-date').value;
+      const ti = document.getElementById('issue-time').value;
+      const entered = [d, ti].filter(Boolean).join(' ');
+      if (!entered) return '';
+
+      const tagged = `${entered} (${state.timezone || 'unknown timezone'})`;
+      if (!d || !ti) return tagged;              // a date alone cannot be converted
+
+      const at = new Date(`${d}T${ti}`);         // parsed as the player's local time
+      if (isNaN(at)) return tagged;
+
+      const p = new Intl.DateTimeFormat('en-GB', {
+        timeZone: 'Asia/Taipei', hourCycle: 'h23',
+        year: 'numeric', month: '2-digit', day: '2-digit',
+        hour: '2-digit', minute: '2-digit',
+      }).formatToParts(at).reduce((o, x) => (o[x.type] = x.value, o), {});
+      const taipei = `${p.year}-${p.month}-${p.day} ${p.hour}:${p.minute}`;
+
+      return taipei === entered ? tagged : `${tagged} → 台北 ${taipei}`;
+    }
+
+    // ── Submit ────────────────────────────────────────────────────────────────
+    function showSubmitError(msg) {
+      const el = document.getElementById('submit-error');
+      el.textContent   = msg;
+      el.style.display = 'block';
+    }
+
+    async function submitReport() {
+      const btn = document.getElementById('submit-btn');
+      if (!state.ip) {
+        showSubmitError(t('submitErrorNoIP'));
+        return;
+      }
+      document.getElementById('submit-error').style.display = 'none';
+
+      const checked = name => [...document.querySelectorAll(`input[name=${name}]:checked`)].map(el => el.value);
+      const payload = {
+        ip: state.ip, countryCode: state.countryCode, isp: state.isp, asn: state.asn, prefix: state.prefix,
+        city: state.city, rdns: state.rdns, egressIps: state.egressIps, cfColo: state.cfColo, warp: state.warp,
+        latency: state.latency, udpNat: state.udpNat,
+        issueTime: buildIssueTime(),
+        issueTimeUtc: issueTimeUtc(document.getElementById('issue-date').value, document.getElementById('issue-time').value),
+        issuePattern: checked('issuePattern')[0] || '',
+        issueType: checked('issueType'),
+        inGamePing: document.getElementById('ingame-ping').value.trim(),
+        roleId: sanitizeText(document.getElementById('roleid-input').value.trim(), 100),
+        nickname: sanitizeText(document.getElementById('nickname-input').value.trim(), 50),
+        networkType: checked('networkType')[0] || '',
+        vpn: checked('vpn')[0] || '',
+        os: state.os, browser: state.browser, screen: state.screen, timezone: state.timezone,
+        connectionType: state.connectionType, deviceMemory: state.deviceMemory, cpuCores: String(state.cpuCores || ''),
+        platform: getActivePlatform(), region: state.region, language: currentLang,
+        servers: state.matchedServers.map(s => ({
+          label: s.label, ip: s.ip,
+          traceroute: state.traces[s.ip] || '', pathping: state.pathpings[s.ip] || '',
+        })),
+        screenshots: state.screenshots,
+      };
+
+      const markDone = () => {
+        state.submitted = true;
+        btn.textContent = t('submittedBtn');
+        btn.classList.add('done');
+        btn.disabled = true;
+      };
+
+      if (!CONFIG.appsScriptUrl) {
+        console.log('[Dev] Apps Script URL not set. Payload:', JSON.stringify(payload, null, 2));
+        markDone();
+        return;
+      }
+
+      btn.disabled    = true;
+      btn.textContent = t('submitting');
+      try {
+        await fetch(CONFIG.appsScriptUrl, { method: 'POST', mode: 'no-cors', body: JSON.stringify(payload) });
+        markDone();
+      } catch (err) {
+        btn.disabled    = false;
+        btn.textContent = t('submitBtn');
+        showSubmitError(t('submitError') + ' (' + err.message + ')');
+      }
+    }
+
+    // ── Init ──────────────────────────────────────────────────────────────────
+    if (!window.__TEST__) {
+      document.getElementById('header-game').textContent = CONFIG.game;
+      collectDeviceInfo();
+      setLang(detectLang());
+      runAutoChecks();
+      loadServers();
+    }
+  </script>
+</body>
+</html>
