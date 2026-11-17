@@ -108,3 +108,132 @@ function egressText(values) {
   if (!ips.length) return '—';
   return ips.length === 1 ? 'single' : ips.join(', ');
 }
+
+// ── Report row ────────────────────────────────────────────────────────────
+const REPORT_HEADERS = [
+  'Submission Time', 'Issue Time', 'Issue Pattern', 'Issue Type', 'In-game Ping (ms)',
+  'Role ID', 'Nickname',
+  'IP', 'ASN', 'ISP / AS Name', 'BGP Prefix', 'Country Code', 'City', 'Reverse DNS',
+  'Egress IPs', 'CF Colo', 'WARP',
+  'Network Type', 'VPN / Accelerator', 'Mobile Connection',
+  'SG (ms)', 'FRA (ms)', 'SAO (ms)', 'QRO (ms)', 'SEL ref (ms)', 'Latency Detail', 'UDP / NAT',
+  'OS', 'Browser', 'Screen', 'Timezone', 'Memory (GB)', 'CPU Cores',
+  'Platform', 'Region', 'Traceroute', 'Pathping', 'Screenshot URL', 'Language',
+  'ISP Summary', 'Ping / MTR Command', 'Reverse Ping Result', 'Status',
+];
+
+function readLatency(raw) {
+  const src = raw && typeof raw === 'object' && !Array.isArray(raw) ? raw : {};
+  const out = {};
+  LATENCY_TARGETS.forEach(k => {
+    const r = src[k] && typeof src[k] === 'object' ? src[k] : {};
+    out[k] = {
+      median: intInRange(r.median, 0, 10000),
+      jitter: intInRange(r.jitter, 0, 10000),
+      loss:   intInRange(r.loss, 0, 100),
+    };
+  });
+  return out;
+}
+
+function readServers(raw) {
+  return (Array.isArray(raw) ? raw : []).slice(0, 10)
+    .filter(s => s && typeof s === 'object')
+    .map(s => ({
+      label:      oneLine(s.label).slice(0, 60),
+      ip:         isValidIp(s.ip) ? String(s.ip).trim() : '',
+      traceroute: String(s.traceroute || ''),
+      pathping:   String(s.pathping || ''),
+    }));
+}
+
+function validatePayload(p) {
+  return {
+    ip:               isValidIp(p.ip) ? String(p.ip).trim() : '',
+    ipRaw:            cellSafe(oneLine(p.ip), 60),
+    issueTime:        cellSafe(oneLine(p.issueTime), 120),
+    issueTimeUtc:     validUtcStamp(p.issueTimeUtc),
+    pattern:          pickEnum(p.issuePattern, ENUMS.issuePattern),
+    issueType:        pickEnumList(p.issueType, ENUMS.issueType),
+    inGamePing:       intInRange(p.inGamePing, 0, 10000),
+    roleId:           cellSafe(oneLine(p.roleId), 100),
+    nickname:         cellSafe(oneLine(p.nickname), 60),
+    asn:              validAsn(p.asn),
+    asName:           cellSafe(oneLine(p.isp), 120),
+    prefix:           validCidr(p.prefix),
+    countryCode:      cellSafe(oneLine(p.countryCode), 8),
+    city:             cellSafe(oneLine(p.city), 60),
+    rdns:             cellSafe(oneLine(p.rdns), 255),
+    egress:           egressText(p.egressIps),
+    colo:             validColo(p.cfColo),
+    warp:             pickEnum(p.warp, ENUMS.warp),
+    networkType:      pickEnum(p.networkType, ENUMS.networkType),
+    vpn:              pickEnum(p.vpn, ENUMS.vpn),
+    mobileConnection: cellSafe(oneLine(p.connectionType), 40),
+    latency:          readLatency(p.latency),
+    udpNat:           ENUMS.udpNat.indexOf(String(p.udpNat)) !== -1 ? UDP_LABELS[p.udpNat] : '—',
+    os:               cellSafe(oneLine(p.os), 40),
+    browser:          cellSafe(oneLine(p.browser), 40),
+    screen:           cellSafe(oneLine(p.screen), 30),
+    timezone:         cellSafe(oneLine(p.timezone), 60),
+    deviceMemory:     cellSafe(oneLine(p.deviceMemory), 20),
+    cpuCores:         cellSafe(oneLine(p.cpuCores), 20),
+    platform:         pickEnum(p.platform, ENUMS.platform),
+    language:         cellSafe(oneLine(p.language), 8),
+    servers:          readServers(p.servers),
+  };
+}
+
+function latencyDetail(lat) {
+  const parts = LATENCY_TARGETS.filter(k => lat[k].median !== '—')
+    .map(k => `${k} j${lat[k].jitter} ${lat[k].loss}%`);
+  return parts.length ? parts.join(' · ') : '—';
+}
+
+function serverBlocks(servers, field) {
+  return cellSafe(servers.filter(s => s[field])
+    .map(s => `[${s.label} — ${s.ip || 'invalid'}]\n${s[field]}`)
+    .join('\n\n'), MAX_TRACE_CHARS);
+}
+
+// Built only from validated values, so a forged payload cannot plant text here
+function buildIspSummary(v) {
+  if (!v.ip) return '—';
+  const lines = [`Source IP: ${v.ip}`];
+  const owner = v.asn !== '—' ? v.asn + (v.asName !== '—' ? ' ' + v.asName : '') : '';
+  if (v.prefix !== '—') lines.push(`Prefix: ${v.prefix}` + (owner ? ` (${owner})` : ''));
+  else if (owner) lines.push(`ASN: ${owner}`);
+  const dest = v.servers.filter(s => s.ip).map(s => `${s.label} ${s.ip}`);
+  if (dest.length) lines.push('Destinations: ' + dest.join(', '));
+  lines.push(v.issueTimeUtc
+    ? `Issue time (UTC): ${v.issueTimeUtc.replace('T', ' ').replace('Z', '')}`
+    : `Issue time (player local): ${v.issueTime}`);
+  if (v.pattern !== '—') lines.push(`Pattern: ${v.pattern}`);
+  const rtt = LATENCY_TARGETS.filter(k => v.latency[k].median !== '—')
+    .map(k => `${k} ${v.latency[k].median} ms`);
+  if (rtt.length) lines.push('Browser RTT median: ' + rtt.join(', '));
+  if (v.udpNat !== '—') lines.push('UDP: ' + v.udpNat);
+  return cellSafe(lines.join('\n'), 2000);
+}
+
+function buildCommands(ip) {
+  return ip ? `ping -c 20 ${ip}\nmtr -rwzc 50 ${ip}` : 'no valid IP — do not run';
+}
+
+function buildRow(v, ctx) {
+  const lat = v.latency;
+  return [
+    ctx.submissionTime, v.issueTime, v.pattern, v.issueType, v.inGamePing,
+    v.roleId, v.nickname,
+    v.ip || v.ipRaw, v.asn, v.asName, v.prefix, v.countryCode, v.city, v.rdns,
+    v.egress, v.colo, v.warp,
+    v.networkType, v.vpn, v.mobileConnection,
+    lat.SG.median, lat.FRA.median, lat.SAO.median, lat.QRO.median, lat.SEL.median,
+    latencyDetail(lat), v.udpNat,
+    v.os, v.browser, v.screen, v.timezone, v.deviceMemory, v.cpuCores,
+    v.platform, ctx.sheetName,
+    serverBlocks(v.servers, 'traceroute'), serverBlocks(v.servers, 'pathping'),
+    ctx.screenshotUrl, v.language,
+    buildIspSummary(v), buildCommands(v.ip), '', 'Pending',
+  ];
+}
