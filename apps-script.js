@@ -1,6 +1,6 @@
 // ── Configuration ─────────────────────────────────────────────────────────
-const SHEET_ID        = 'FILL_ME';   // MHO sheet — never the DF one
-const DRIVE_FOLDER_ID = 'FILL_ME';
+const SHEET_ID        = '1phR4YaSkNIogYzwSenJDu7qNKXdq6QzdfSS-0ecpQsI';   // MHO sheet — never the DF one
+const DRIVE_FOLDER_ID = '1O1ZLiURBSHWTexPPGoeQvnn6l3DoPP3E';
 const REPORT_TIMEZONE = 'Asia/Taipei';
 
 // ── Input limits ──────────────────────────────────────────────────────────
