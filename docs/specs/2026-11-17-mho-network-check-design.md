@@ -166,10 +166,10 @@ Role ID 說明文字：點大廳右上角的選單按鈕 → 進入「個人主�
 
 - 建立 `RTCPeerConnection`，ICE 伺服器設為 `stun:stun.l.google.com:19302` 與 `stun:stun.cloudflare.com:3478`，建立 data channel 後觸發候選收集。
 - 只讀取 `srflx`（對外映射）候選，**不讀取、不送出 `host` 候選（區網 IP）**。
-- 5 秒內沒有任何 `srflx` 候選 → `UDP blocked`
-- 兩台 STUN 回報的對外 port 相同 → `UDP ok · NAT: cone`；不同 → `UDP ok · NAT: symmetric`
-- 只拿到一台的結果 → `UDP ok · NAT: unknown`
+- 5 秒內沒有任何 IPv4 `srflx` 候選 → `UDP blocked`
+- 同一個本機埠對到兩個以上不同的對外 port → `UDP ok · NAT: symmetric`；否則 → `UDP ok · NAT: cone`
 - 瀏覽器不支援 WebRTC → `—`
+- 限制：瀏覽器會把相同的候選合併，所以分辨不出「只有一台 STUN 回應」。若只有一台回應且 NAT 為對稱型，會被誤判為 cone。這是網頁量測的極限，結果欄只當參考。
 
 ### 5.3 裝置資訊
 
