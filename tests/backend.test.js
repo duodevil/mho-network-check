@@ -132,3 +132,59 @@ test('issue time falls back to player text without a UTC stamp', () => {
   p.issueTimeUtc = 'bad';
   assert.ok(b.buildIspSummary(b.validatePayload(p)).includes('Issue time (player local): 2026-11-17 21:05'));
 });
+
+function fakeGoogle(ipRegionRows) {
+  const sheets = {}, cache = {};
+  const makeSheet = name => (sheets[name] = sheets[name] || {
+    rows: [], appendRow(r) { this.rows.push(r); },
+    getRange() { return { setValues() { return this; }, setFontWeight() { return this; } }; },
+    setFrozenRows() {},
+    getDataRange: () => ({ getValues: () => ipRegionRows }),
+  });
+  if (ipRegionRows) makeSheet('IP_Region');
+  return {
+    sheets,
+    stubs: {
+      SpreadsheetApp: { openById: () => ({ getSheetByName: n => sheets[n] || null, insertSheet: makeSheet }) },
+      CacheService: { getScriptCache: () => ({ get: k => cache[k] || null, put: (k, v) => { cache[k] = v; } }) },
+      Utilities: { formatDate: () => '2026-11-17 21:00:00 UTC+0800', base64Decode: () => [] },
+      ContentService: { MimeType: { JSON: 'json' }, createTextOutput: s => ({ setMimeType: () => JSON.parse(s) }) },
+      DriveApp: {},
+    },
+  };
+}
+const IP_REGION = [
+  ['Region', 'Server Name', 'IP', 'Country Codes'],
+  ['LATAM', 'Queretaro', '161.120.133.175', 'MX'],
+  ['APAC', 'Singapore', '43.172.182.161', '*'],
+  ['', '', '', ''],
+];
+
+test('doGet returns rows including the * row', () => {
+  const g = fakeGoogle(IP_REGION);
+  const out = loadBackend(g.stubs).doGet();
+  assert.deepStrictEqual(JSON.parse(JSON.stringify(out)), [
+    { region: 'LATAM', name: 'Queretaro', ip: '161.120.133.175', countries: ['MX'] },
+    { region: 'APAC', name: 'Singapore', ip: '43.172.182.161', countries: ['*'] },
+  ]);
+});
+
+test('doPost routes to known region, unknown to Other, rate-limits', () => {
+  const g = fakeGoogle(IP_REGION);
+  const b = loadBackend(g.stubs);
+  const post = p => b.doPost({ postData: { contents: JSON.stringify(p) } });
+  assert.strictEqual(post({ ip: '1.1.1.1', region: 'LATAM' }).status, 'ok');
+  assert.strictEqual(post({ ip: '1.1.1.1', region: 'LATAM' }).status, 'error');
+  assert.strictEqual(post({ ip: '2.2.2.2', region: 'HACKED' }).status, 'ok');
+  assert.strictEqual(g.sheets.LATAM.rows.length, 1);
+  assert.strictEqual(g.sheets.Other.rows.length, 1);
+  assert.ok(!g.sheets.HACKED);
+  assert.strictEqual(g.sheets.LATAM.rows[0].length, 43);
+});
+
+test('doPost rejects malformed bodies', () => {
+  const b = loadBackend(fakeGoogle(IP_REGION).stubs);
+  assert.strictEqual(b.doPost({}).status, 'error');
+  assert.strictEqual(b.doPost({ postData: { contents: '[1]' } }).status, 'error');
+  assert.strictEqual(b.doPost({ postData: { contents: '{bad' } }).status, 'error');
+});

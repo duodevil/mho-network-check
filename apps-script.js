@@ -237,3 +237,125 @@ function buildRow(v, ctx) {
     buildIspSummary(v), buildCommands(v.ip), '', 'Pending',
   ];
 }
+
+// ── Serve IP_Region config as JSON (GET) ──────────────────────────────────
+function doGet() {
+  try {
+    const sheet = SpreadsheetApp.openById(SHEET_ID).getSheetByName('IP_Region');
+    if (!sheet) return jsonOut([]);
+    const config = sheet.getDataRange().getValues().slice(1)
+      .filter(r => r[0] && r[2])
+      .map(r => ({
+        region:    String(r[0]).trim(),
+        name:      String(r[1]).trim(),
+        ip:        String(r[2]).trim(),
+        countries: String(r[3]).split(',').map(c => c.trim().toUpperCase()).filter(Boolean),
+      }));
+    return jsonOut(config);
+  } catch (err) {
+    return jsonOut({ error: err.toString() });
+  }
+}
+
+// Trust the file's own magic bytes, never the client-supplied mimeType
+function imageKind(b) {
+  if (b.length > 3  && b[0] === -1 && b[1] === -40 && b[2] === -1) return 'jpg';
+  if (b.length > 8  && b[0] === -119 && b[1] === 80 && b[2] === 78 && b[3] === 71) return 'png';
+  if (b.length > 12 && b[0] === 82 && b[1] === 73 && b[2] === 70 && b[3] === 70
+                    && b[8] === 87 && b[9] === 69 && b[10] === 66 && b[11] === 80) return 'webp';
+  if (b.length > 12 && b[4] === 102 && b[5] === 116 && b[6] === 121 && b[7] === 112) return 'heic';
+  return null;
+}
+
+function rateLimited(key) {
+  const cache = CacheService.getScriptCache();
+  if (cache.get('rl_' + key)) return true;
+  cache.put('rl_' + key, '1', RATE_LIMIT_SECONDS);
+  return false;
+}
+
+// Only the four game regions, and only those present in IP_Region, may become sheets
+function allowedRegions(ss) {
+  const sheet = ss.getSheetByName('IP_Region');
+  if (!sheet) return [];
+  return sheet.getDataRange().getValues().slice(1)
+    .map(r => String(r[0]).trim()).filter(r => REGIONS.indexOf(r) !== -1);
+}
+
+function saveScreenshots(raw, submissionTime, ip) {
+  const urls = [];
+  (Array.isArray(raw) ? raw.slice(0, MAX_SCREENSHOTS) : []).forEach((s, i) => {
+    if (!s || typeof s.data !== 'string') return;
+    let bytes;
+    try { bytes = Utilities.base64Decode(s.data); } catch (err) { return; }
+    if (bytes.length > MAX_SCREENSHOT_BYTES) return;
+    const kind = imageKind(bytes);
+    if (!kind) return;
+    const name = `${submissionTime}_${ip || 'unknown'}_${i + 1}.${kind}`.replace(/[:+ ]/g, '-');
+    const mime = kind === 'jpg' ? 'image/jpeg' : 'image/' + kind;
+    const file = DriveApp.getFolderById(DRIVE_FOLDER_ID).createFile(Utilities.newBlob(bytes, mime, name));
+    file.setSharing(DriveApp.Access.ANYONE_WITH_LINK, DriveApp.Permission.VIEW);
+    urls.push(file.getUrl());
+  });
+  return urls.length ? urls.join('\n') : '—';
+}
+
+// ── Save report (POST) ────────────────────────────────────────────────────
+function doPost(e) {
+  try {
+    if (!e || !e.postData || !e.postData.contents) return jsonOut({ status: 'error', message: 'empty request' });
+    if (e.postData.contents.length > MAX_PAYLOAD_CHARS) return jsonOut({ status: 'error', message: 'payload too large' });
+
+    let payload;
+    try { payload = JSON.parse(e.postData.contents); }
+    catch (err) { return jsonOut({ status: 'error', message: 'malformed json' }); }
+    if (!payload || typeof payload !== 'object' || Array.isArray(payload)) {
+      return jsonOut({ status: 'error', message: 'malformed payload' });
+    }
+
+    const v = validatePayload(payload);
+    if (rateLimited(v.ip || 'anonymous')) return jsonOut({ status: 'error', message: 'too many submissions' });
+
+    const submissionTime = Utilities.formatDate(new Date(), REPORT_TIMEZONE, "yyyy-MM-dd HH:mm:ss 'UTC'Z");
+    const ss        = SpreadsheetApp.openById(SHEET_ID);
+    const requested = String(payload.region || '').trim();
+    const sheetName = allowedRegions(ss).indexOf(requested) !== -1 ? requested : 'Other';
+
+    getOrCreateSheet(ss, sheetName).appendRow(buildRow(v, {
+      submissionTime,
+      sheetName,
+      screenshotUrl: saveScreenshots(payload.screenshots, submissionTime, v.ip),
+    }));
+    return jsonOut({ status: 'ok' });
+  } catch (err) {
+    return jsonOut({ status: 'error', message: err.toString() });
+  }
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────
+function getOrCreateSheet(ss, name) {
+  let sheet = ss.getSheetByName(name);
+  if (!sheet) {
+    sheet = ss.insertSheet(name);
+    sheet.getRange(1, 1, 1, REPORT_HEADERS.length).setValues([REPORT_HEADERS]);
+    sheet.setFrozenRows(1);
+    sheet.getRange(1, 1, 1, REPORT_HEADERS.length).setFontWeight('bold');
+  }
+  return sheet;
+}
+
+// Run once after creating the sheet
+function setup() {
+  const ss = SpreadsheetApp.openById(SHEET_ID);
+  if (!ss.getSheetByName('IP_Region')) {
+    const cfg = ss.insertSheet('IP_Region');
+    cfg.getRange(1, 1, 1, 4).setValues([['Region', 'Server Name', 'IP', 'Country Codes (comma-separated, * = everyone else)']]);
+    cfg.setFrozenRows(1);
+    cfg.getRange(1, 1, 1, 4).setFontWeight('bold');
+  }
+  REGIONS.concat('Other').forEach(n => getOrCreateSheet(ss, n));
+}
+
+function jsonOut(data) {
+  return ContentService.createTextOutput(JSON.stringify(data)).setMimeType(ContentService.MimeType.JSON);
+}
