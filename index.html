@@ -80,7 +80,7 @@
     .btn-submit.done { background: #059669; }
     .submit-error { margin-top: 8px; font-size: 12px; color: #dc2626; background: #fef2f2; border: 1px solid #fecaca; border-radius: 6px; padding: 8px 10px; display: none; }
 
-    /* IPs, commands and pasted output must never be mirrored in Arabic */
+    /* IPs and commands must never be mirrored in Arabic; paste boxes use dir="auto" instead */
     .ltr { direction: ltr; unicode-bidi: isolate; text-align: left; }
 
     @media (max-width: 400px) {
@@ -178,7 +178,7 @@
         <label class="issue-label" for="roleid-input" data-i18n="roleIdLabel"></label>
         <div class="field-guide" data-i18n="roleIdGuide"></div>
         <img class="guide-img" src="img/roleid.jpg" alt="" data-i18n-alt="roleIdImgCaption">
-        <input type="text" id="roleid-input" class="issue-input ltr" style="width:100%" maxlength="100"
+        <input type="text" id="roleid-input" class="issue-input" dir="auto" style="width:100%" maxlength="100"
                data-i18n-placeholder="roleIdPlaceholder" oninput="this.value=sanitizeText(this.value,100)">
       </div>
 
@@ -497,19 +497,31 @@
       renderIdentity();
     }
 
-    async function timeOnce(url) {
-      const t0 = performance.now();
+    // Chrome opens a fresh connection for every no-cors request to these
+    // endpoints, which triples the time. A cors request reuses the connection;
+    // it is rejected for lacking CORS headers, but only after the response
+    // arrives, so the rejection still marks one full round trip.
+    async function timeOnce(url, mode) {
+      const ctrl  = new AbortController();
+      const timer = setTimeout(() => ctrl.abort(), 3000);
+      const t0    = performance.now();
       try {
-        await fetchWithTimeout(`${url}?r=${Math.random().toString(36).slice(2)}`, 3000, { mode: 'no-cors', cache: 'no-store' });
-        return Math.round(performance.now() - t0);
-      } catch { return null; }
+        await fetch(`${url}?r=${Math.random().toString(36).slice(2)}`, { mode, cache: 'no-store', signal: ctrl.signal });
+      } catch {
+        if (ctrl.signal.aborted) return null;
+        if (mode === 'no-cors') return null;     // opaque requests only fail when unreachable
+      } finally {
+        clearTimeout(timer);
+      }
+      return Math.round(performance.now() - t0);
     }
 
     async function measureLatency() {
       for (const target of LATENCY_TARGETS) {
-        await timeOnce(target.url);            // warm-up: DNS + TLS
+        const reachable = await timeOnce(target.url, 'no-cors') !== null;
+        if (reachable) await timeOnce(target.url, 'cors');   // warm-up: DNS + TCP + TLS
         const samples = [];
-        for (let i = 0; i < 10; i++) samples.push(await timeOnce(target.url));
+        for (let i = 0; i < 10; i++) samples.push(reachable ? await timeOnce(target.url, 'cors') : null);
         state.latency[target.key] = latencyStats(samples);
         renderLatency();
       }
@@ -696,7 +708,7 @@
               <summary>${t('advancedToggle')}</summary>
               <div class="field-guide">${t('pathpingInstr')}</div>
               <div class="code-block ltr"><span>${pp}</span><button class="copy-btn" onclick="copyCmd('${pp}', this)">Copy</button></div>
-              <textarea class="paste-area ltr" id="pathping-${id}" maxlength="20000"
+              <textarea class="paste-area" dir="auto" id="pathping-${id}" maxlength="20000"
                 placeholder="${esc(t('pastePlaceholder'))}" oninput="state.pathpings['${srv.ip}'] = this.value"></textarea>
             </details>`;
           return `
@@ -705,7 +717,7 @@
               <div class="code-block ltr"><span>${cmd}</span><button class="copy-btn" onclick="copyCmd('${cmd}', this)">Copy</button></div>
               <div class="field-guide">${t('traceInstr3')}</div>
               <div class="field-guide warn">${t('traceHint')}</div>
-              <textarea class="paste-area ltr" id="trace-${id}" maxlength="20000"
+              <textarea class="paste-area" dir="auto" id="trace-${id}" maxlength="20000"
                 placeholder="${esc(t('pastePlaceholder'))}" oninput="state.traces['${srv.ip}'] = this.value"></textarea>
               ${advanced}
             </div>`;
