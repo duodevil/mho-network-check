@@ -154,13 +154,14 @@ Role ID 說明文字：點大廳右上角的選單按鈕 → 進入「個人主�
 | QRO | 克雷塔羅 | `https://cos.na-queretaro.myqcloud.com/` |
 | SEL | 首爾（比較參考） | `https://cos.ap-seoul.myqcloud.com/` |
 
-- 方法：`fetch(url + '?r=' + 亂數, { mode: 'no-cors', cache: 'no-store' })`，用 `performance.now()` 計時。
-- 每個端點先連一次暖身（不計入，用來扣掉 DNS 查詢和 TLS 握手），再連 10 次；每次逾時上限 3 秒。
+- 方法：`fetch(url + '?r=' + 亂數, { mode: 'cors', cache: 'no-store' })`，用 `performance.now()` 計時。COS 不回 CORS 標頭，所以請求一定會被瀏覽器擋下，但擋下時回應已經到達，計到的時間就是一次往返。
+- 不用 `no-cors`：實測 Chrome 對這些端點的 `no-cors` 請求每次都重新建連線，量到的值約為真實延遲的 3 倍（台北→新加坡 196 ms，TCP 往返為 58 ms）。`cors` 模式會重用連線（63 ms）。
+- 每個端點先送一次 `no-cors` 確認連得到（`no-cors` 只有在連不到時才會失敗）；連不到就記為全部逾時。接著用 `cors` 暖身一次（不計入，扣掉 DNS、TCP、TLS），再量 10 次；每次逾時上限 3 秒，逾時由 AbortController 判斷。
+- 2026-11-17 台北實測，頁面中位數與 curl 的 TCP 往返時間比較：新加坡 70／58、法蘭克福 263／242、聖保羅 324／325、克雷塔羅 276／272、首爾 70／64（ms）。
 - 各端點依序量測，不同時進行。
 - 中位數：成功樣本的中位數，取整數 ms。
 - 抖動：相鄰兩個成功樣本差值絕對值的平均，取整數 ms。
 - 逾時比例：逾時次數 ÷ 10。
-- 上線前驗證：在 Mac 上比較頁面量到的數字與 `ping` 同一端點的結果，確認誤差在合理範圍內才採用。
 
 ### 5.2 UDP／NAT
 
