@@ -32,6 +32,7 @@
 | 15 | 沒有比對到國家的玩家 | 用 `IP_Region` 中國碼填 `*` 的那幾列 |
 | 16 | ISP 回報摘要欄 | 加 |
 | 17 | mtr 指令 | 加 |
+| 18 | IP_Region 實際內容（11/17–18 與 Steve 逐列確認） | Server Name 用城市名；APAC→新加坡＋新山；KR→新加坡 KR 對戰服＋首爾 `Seoul (ref)`（43.155.131.42，比較用）；MX→聖保羅＋克雷塔羅；BR、CO、CL、AR、PE→聖保羅；SA、TR、IQ、AE、EG、DZ→法蘭克福；`*`→新加坡 |
 
 **不收集**：IPv6、裝置時鐘偏差。不使用 VPN 偵測 API（免費版無法可靠判斷），改為詢問玩家，並參考 Cloudflare 的 `warp` 欄位。
 
