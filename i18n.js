@@ -40,7 +40,7 @@ const I18N = {
     udpBlocked:       'UDP blocked',
     udpUnsupported:   'Cannot be tested in this browser',
 
-    step3Label:       'STEP 3 — TRACEROUTE',
+    step3Label:       'STEP 2 — TRACEROUTE',
     serversLoading:   'Loading server information…',
     serversFailed:    'Could not load the server list.',
     serversNone:      'No test server is set up for your region yet — you can skip this step.',
@@ -72,7 +72,7 @@ const I18N = {
     uploadCountError: 'Please upload at most 4 screenshots.',
     uploadSizeError:  'File too large (max 5 MB). Please compress and try again.',
 
-    step4Label:            'STEP 4 — ISSUE DETAILS',
+    step4Label:            'STEP 3 — ISSUE DETAILS',
     roleIdLabel:           'Role ID',
     roleIdGuide:           'In the lobby, tap the <strong>menu button</strong> at the top-right → open your <strong>profile page</strong> → tap the copy icon next to <strong>Role ID</strong> at the top-right, then paste it below.',
     roleIdPlaceholder:     'e.g. 1234567890',
@@ -103,7 +103,7 @@ const I18N = {
     issueTimeLabel:        'When did the issue occur?',
     issueTimeSub:          'Approximate time is fine — leave blank if unsure',
 
-    step5Label:       'STEP 5 — SUBMIT',
+    step5Label:       'STEP 4 — SUBMIT',
     disclaimerText:   'By submitting, you agree to share the information on this page — your IP address and internet provider details, the network measurements above, your device information and the details you entered — with our support team to investigate connection problems. When needed to fix the problem, we may share your IP address, network measurements and the time of the issue with your internet provider or our server hosting provider. This data will not be used for any other purpose.',
     submitBtn:        'I Agree and Submit',
     measuringBtn:     'Measuring…',
@@ -152,7 +152,7 @@ const I18N = {
     udpBlocked:       'UDP 受阻',
     udpUnsupported:   '此瀏覽器無法測試',
 
-    step3Label:       '步驟 3 — 路由追蹤（Traceroute）',
+    step3Label:       '步驟 2 — 路由追蹤（Traceroute）',
     serversLoading:   '正在載入伺服器資訊…',
     serversFailed:    '無法載入伺服器清單。',
     serversNone:      '你所在的地區尚未設定測試伺服器，可以略過這個步驟。',
@@ -184,7 +184,7 @@ const I18N = {
     uploadCountError: '最多上傳 4 張截圖。',
     uploadSizeError:  '檔案過大（最大 5 MB），請壓縮後再試。',
 
-    step4Label:            '步驟 4 — 問題描述',
+    step4Label:            '步驟 3 — 問題描述',
     roleIdLabel:           'Role ID',
     roleIdGuide:           '在大廳點<strong>右上角的選單按鈕</strong> → 進入<strong>個人主頁</strong> → 點右上角 <strong>Role ID</strong> 旁的複製圖示，貼到下方。',
     roleIdPlaceholder:     '例：1234567890',
@@ -215,7 +215,7 @@ const I18N = {
     issueTimeLabel:        '問題發生時間？',
     issueTimeSub:          '大概時間即可，不確定可留空',
 
-    step5Label:       '步驟 5 — 送出',
+    step5Label:       '步驟 4 — 送出',
     disclaimerText:   '送出即表示你同意將本頁資訊（你的 IP 位址與網路業者資訊、上方的網路量測結果、裝置資訊，以及你填寫的內容）提供給我們的客服團隊，用於調查連線問題。若排查需要，我們可能會將你的 IP 位址、網路量測結果與問題發生時間提供給你的網路業者或我們的伺服器機房供應商。這些資料不會用於其他用途。',
     submitBtn:        '我同意並提交',
     measuringBtn:     '量測中…',
@@ -264,7 +264,7 @@ const I18N = {
     udpBlocked:       'UDP bị chặn',
     udpUnsupported:   'Không thể kiểm tra trên trình duyệt này',
 
-    step3Label:       'BƯỚC 3 — TRACEROUTE',
+    step3Label:       'BƯỚC 2 — TRACEROUTE',
     serversLoading:   'Đang tải thông tin máy chủ…',
     serversFailed:    'Không tải được danh sách máy chủ.',
     serversNone:      'Khu vực của bạn chưa có máy chủ kiểm tra — bạn có thể bỏ qua bước này.',
@@ -296,7 +296,7 @@ const I18N = {
     uploadCountError: 'Vui lòng tải lên tối đa 4 ảnh chụp màn hình.',
     uploadSizeError:  'Tệp quá lớn (tối đa 5 MB). Vui lòng nén lại và thử lại.',
 
-    step4Label:            'BƯỚC 4 — CHI TIẾT SỰ CỐ',
+    step4Label:            'BƯỚC 3 — CHI TIẾT SỰ CỐ',
     roleIdLabel:           'Role ID',
     roleIdGuide:           'Ở sảnh, chạm <strong>nút menu</strong> ở góc trên bên phải → mở <strong>trang cá nhân</strong> → chạm biểu tượng sao chép cạnh <strong>Role ID</strong> ở góc trên bên phải, rồi dán vào bên dưới.',
     roleIdPlaceholder:     'VD: 1234567890',
@@ -327,7 +327,7 @@ const I18N = {
     issueTimeLabel:        'Sự cố xảy ra khi nào?',
     issueTimeSub:          'Thời gian ước lượng là được — để trống nếu không chắc',
 
-    step5Label:       'BƯỚC 5 — GỬI',
+    step5Label:       'BƯỚC 4 — GỬI',
     disclaimerText:   'Khi gửi, bạn đồng ý chia sẻ thông tin trên trang này — địa chỉ IP và thông tin nhà mạng, kết quả đo mạng ở trên, thông tin thiết bị và nội dung bạn đã nhập — với đội ngũ hỗ trợ của chúng tôi để điều tra sự cố kết nối. Khi cần để khắc phục sự cố, chúng tôi có thể cung cấp địa chỉ IP, kết quả đo mạng và thời điểm xảy ra sự cố cho nhà mạng của bạn hoặc nhà cung cấp máy chủ của chúng tôi. Dữ liệu này sẽ không được dùng cho mục đích nào khác.',
     submitBtn:        'Tôi đồng ý và gửi',
     measuringBtn:     'Đang đo…',
@@ -376,7 +376,7 @@ const I18N = {
     udpBlocked:       'UDP ถูกบล็อก',
     udpUnsupported:   'ไม่สามารถทดสอบในเบราว์เซอร์นี้',
 
-    step3Label:       'ขั้นตอนที่ 3 — TRACEROUTE',
+    step3Label:       'ขั้นตอนที่ 2 — TRACEROUTE',
     serversLoading:   'กำลังโหลดข้อมูลเซิร์ฟเวอร์…',
     serversFailed:    'โหลดรายการเซิร์ฟเวอร์ไม่สำเร็จ',
     serversNone:      'ยังไม่มีเซิร์ฟเวอร์ทดสอบสำหรับภูมิภาคของคุณ — ข้ามขั้นตอนนี้ได้',
@@ -408,7 +408,7 @@ const I18N = {
     uploadCountError: 'อัปโหลดภาพหน้าจอได้สูงสุด 4 ภาพ',
     uploadSizeError:  'ไฟล์ใหญ่เกินไป (สูงสุด 5 MB) กรุณาบีบอัดแล้วลองใหม่',
 
-    step4Label:            'ขั้นตอนที่ 4 — รายละเอียดปัญหา',
+    step4Label:            'ขั้นตอนที่ 3 — รายละเอียดปัญหา',
     roleIdLabel:           'Role ID',
     roleIdGuide:           'ที่ล็อบบี้ แตะ<strong>ปุ่มเมนู</strong>ที่มุมบนขวา → เปิด<strong>หน้าโปรไฟล์</strong> → แตะไอคอนคัดลอกข้าง <strong>Role ID</strong> ที่มุมบนขวา แล้ววางด้านล่าง',
     roleIdPlaceholder:     'เช่น 1234567890',
@@ -439,7 +439,7 @@ const I18N = {
     issueTimeLabel:        'ปัญหาเกิดขึ้นเมื่อใด?',
     issueTimeSub:          'ระบุเวลาโดยประมาณได้ — หากไม่แน่ใจให้เว้นว่าง',
 
-    step5Label:       'ขั้นตอนที่ 5 — ส่งข้อมูล',
+    step5Label:       'ขั้นตอนที่ 4 — ส่งข้อมูล',
     disclaimerText:   'เมื่อส่งข้อมูล ถือว่าคุณยินยอมให้แบ่งปันข้อมูลในหน้านี้ ได้แก่ ที่อยู่ IP และข้อมูลผู้ให้บริการอินเทอร์เน็ต ผลการวัดเครือข่ายด้านบน ข้อมูลอุปกรณ์ และรายละเอียดที่คุณกรอก แก่ทีมสนับสนุนของเราเพื่อตรวจสอบปัญหาการเชื่อมต่อ หากจำเป็นต่อการแก้ไขปัญหา เราอาจแบ่งปันที่อยู่ IP ผลการวัดเครือข่าย และเวลาที่เกิดปัญหา แก่ผู้ให้บริการอินเทอร์เน็ตของคุณหรือผู้ให้บริการเซิร์ฟเวอร์ของเรา ข้อมูลนี้จะไม่ถูกนำไปใช้เพื่อวัตถุประสงค์อื่น',
     submitBtn:        'ฉันยอมรับและส่งข้อมูล',
     measuringBtn:     'กำลังวัด…',
@@ -488,7 +488,7 @@ const I18N = {
     udpBlocked:       'UDP diblokir',
     udpUnsupported:   'Tidak dapat diuji di browser ini',
 
-    step3Label:       'LANGKAH 3 — TRACEROUTE',
+    step3Label:       'LANGKAH 2 — TRACEROUTE',
     serversLoading:   'Memuat informasi server…',
     serversFailed:    'Gagal memuat daftar server.',
     serversNone:      'Belum ada server uji untuk wilayah Anda — Anda bisa melewati langkah ini.',
@@ -520,7 +520,7 @@ const I18N = {
     uploadCountError: 'Unggah maksimal 4 tangkapan layar.',
     uploadSizeError:  'File terlalu besar (maks 5 MB). Silakan kompres dan coba lagi.',
 
-    step4Label:            'LANGKAH 4 — DETAIL MASALAH',
+    step4Label:            'LANGKAH 3 — DETAIL MASALAH',
     roleIdLabel:           'Role ID',
     roleIdGuide:           'Di lobi, ketuk <strong>tombol menu</strong> di kanan atas → buka <strong>halaman profil</strong> → ketuk ikon salin di sebelah <strong>Role ID</strong> di kanan atas, lalu tempel di bawah.',
     roleIdPlaceholder:     'mis. 1234567890',
@@ -551,7 +551,7 @@ const I18N = {
     issueTimeLabel:        'Kapan masalah terjadi?',
     issueTimeSub:          'Perkiraan waktu sudah cukup — kosongkan jika tidak yakin',
 
-    step5Label:       'LANGKAH 5 — KIRIM',
+    step5Label:       'LANGKAH 4 — KIRIM',
     disclaimerText:   'Dengan mengirim, Anda setuju membagikan informasi di halaman ini — alamat IP dan detail penyedia internet, hasil pengukuran jaringan di atas, informasi perangkat, dan detail yang Anda isi — kepada tim dukungan kami untuk menyelidiki masalah koneksi. Bila diperlukan untuk memperbaiki masalah, kami dapat membagikan alamat IP, hasil pengukuran jaringan, dan waktu kejadian kepada penyedia internet Anda atau penyedia server kami. Data ini tidak akan digunakan untuk tujuan lain.',
     submitBtn:        'Saya Setuju dan Kirim',
     measuringBtn:     'Mengukur…',
@@ -600,7 +600,7 @@ const I18N = {
     udpBlocked:       'UDP bloqueado',
     udpUnsupported:   'No se puede probar en este navegador',
 
-    step3Label:       'PASO 3 — TRACEROUTE',
+    step3Label:       'PASO 2 — TRACEROUTE',
     serversLoading:   'Cargando información del servidor…',
     serversFailed:    'No se pudo cargar la lista de servidores.',
     serversNone:      'Aún no hay un servidor de prueba para tu región; puedes omitir este paso.',
@@ -632,7 +632,7 @@ const I18N = {
     uploadCountError: 'Sube como máximo 4 capturas de pantalla.',
     uploadSizeError:  'Archivo demasiado grande (máx. 5 MB). Comprímelo e inténtalo de nuevo.',
 
-    step4Label:            'PASO 4 — DETALLES DEL PROBLEMA',
+    step4Label:            'PASO 3 — DETALLES DEL PROBLEMA',
     roleIdLabel:           'Role ID',
     roleIdGuide:           'En el lobby, toca el <strong>botón de menú</strong> arriba a la derecha → abre tu <strong>página de perfil</strong> → toca el icono de copiar junto a <strong>Role ID</strong> arriba a la derecha y pégalo abajo.',
     roleIdPlaceholder:     'p. ej. 1234567890',
@@ -663,7 +663,7 @@ const I18N = {
     issueTimeLabel:        '¿Cuándo ocurrió el problema?',
     issueTimeSub:          'Una hora aproximada es suficiente — déjalo en blanco si no estás seguro',
 
-    step5Label:       'PASO 5 — ENVIAR',
+    step5Label:       'PASO 4 — ENVIAR',
     disclaimerText:   'Al enviar, aceptas compartir la información de esta página —tu dirección IP y los datos de tu proveedor de internet, las mediciones de red de arriba, la información de tu dispositivo y los datos que ingresaste— con nuestro equipo de soporte para investigar problemas de conexión. Cuando sea necesario para resolver el problema, podemos compartir tu dirección IP, las mediciones de red y la hora del problema con tu proveedor de internet o con nuestro proveedor de servidores. Estos datos no se usarán para ningún otro fin.',
     submitBtn:        'Acepto y enviar',
     measuringBtn:     'Midiendo…',
@@ -712,7 +712,7 @@ const I18N = {
     udpBlocked:       'UDP 차단됨',
     udpUnsupported:   '이 브라우저에서는 테스트할 수 없습니다',
 
-    step3Label:       '3단계 — 경로 추적 (Traceroute)',
+    step3Label:       '2단계 — 경로 추적 (Traceroute)',
     serversLoading:   '서버 정보를 불러오는 중…',
     serversFailed:    '서버 목록을 불러오지 못했습니다.',
     serversNone:      '아직 해당 지역의 테스트 서버가 없습니다. 이 단계는 건너뛰어도 됩니다.',
@@ -744,7 +744,7 @@ const I18N = {
     uploadCountError: '스크린샷은 최대 4장까지 업로드할 수 있습니다.',
     uploadSizeError:  '파일이 너무 큽니다(최대 5MB). 압축한 후 다시 시도하세요.',
 
-    step4Label:            '4단계 — 문제 내용',
+    step4Label:            '3단계 — 문제 내용',
     roleIdLabel:           'Role ID',
     roleIdGuide:           '로비에서 <strong>오른쪽 위 메뉴 버튼</strong>을 누르고 → <strong>개인 홈</strong>으로 이동 → 오른쪽 위 <strong>Role ID</strong> 옆의 복사 아이콘을 눌러 아래에 붙여 넣으세요.',
     roleIdPlaceholder:     '예: 1234567890',
@@ -775,7 +775,7 @@ const I18N = {
     issueTimeLabel:        '문제가 언제 발생했나요?',
     issueTimeSub:          '대략적인 시간이면 됩니다. 잘 모르면 비워 두세요',
 
-    step5Label:       '5단계 — 제출',
+    step5Label:       '4단계 — 제출',
     disclaimerText:   '제출하면 이 페이지의 정보(IP 주소와 통신사 정보, 위의 네트워크 측정 결과, 기기 정보, 입력한 내용)를 연결 문제 조사를 위해 고객 지원팀에 제공하는 데 동의하는 것입니다. 문제 해결에 필요한 경우 IP 주소, 네트워크 측정 결과, 문제 발생 시간을 이용 중인 통신사 또는 당사 서버 호스팅 업체에 제공할 수 있습니다. 이 데이터는 다른 목적으로 사용되지 않습니다.',
     submitBtn:        '동의하고 제출',
     measuringBtn:     '측정 중…',
@@ -824,7 +824,7 @@ const I18N = {
     udpBlocked:       'UDP bloqueado',
     udpUnsupported:   'Não é possível testar neste navegador',
 
-    step3Label:       'PASSO 3 — TRACEROUTE',
+    step3Label:       'PASSO 2 — TRACEROUTE',
     serversLoading:   'Carregando informações do servidor…',
     serversFailed:    'Não foi possível carregar a lista de servidores.',
     serversNone:      'Ainda não há servidor de teste para a sua região — você pode pular este passo.',
@@ -856,7 +856,7 @@ const I18N = {
     uploadCountError: 'Envie no máximo 4 capturas de tela.',
     uploadSizeError:  'Arquivo muito grande (máx. 5 MB). Compacte e tente novamente.',
 
-    step4Label:            'PASSO 4 — DETALHES DO PROBLEMA',
+    step4Label:            'PASSO 3 — DETALHES DO PROBLEMA',
     roleIdLabel:           'Role ID',
     roleIdGuide:           'No lobby, toque no <strong>botão de menu</strong> no canto superior direito → abra a sua <strong>página de perfil</strong> → toque no ícone de copiar ao lado de <strong>Role ID</strong> no canto superior direito e cole abaixo.',
     roleIdPlaceholder:     'ex.: 1234567890',
@@ -887,7 +887,7 @@ const I18N = {
     issueTimeLabel:        'Quando o problema aconteceu?',
     issueTimeSub:          'Um horário aproximado já serve — deixe em branco se não tiver certeza',
 
-    step5Label:       'PASSO 5 — ENVIAR',
+    step5Label:       'PASSO 4 — ENVIAR',
     disclaimerText:   'Ao enviar, você concorda em compartilhar as informações desta página — seu endereço IP e os dados do seu provedor de internet, as medições de rede acima, as informações do seu dispositivo e os dados que você informou — com nossa equipe de suporte para investigar problemas de conexão. Quando necessário para resolver o problema, poderemos compartilhar seu endereço IP, as medições de rede e o horário do problema com o seu provedor de internet ou com o nosso provedor de servidores. Esses dados não serão usados para nenhuma outra finalidade.',
     submitBtn:        'Concordo e enviar',
     measuringBtn:     'Medindo…',
@@ -936,7 +936,7 @@ const I18N = {
     udpBlocked:       'UDP محظور',
     udpUnsupported:   'لا يمكن الاختبار في هذا المتصفح',
 
-    step3Label:       'الخطوة 3 — تتبّع المسار (Traceroute)',
+    step3Label:       'الخطوة 2 — تتبّع المسار (Traceroute)',
     serversLoading:   'جارٍ تحميل معلومات الخادم…',
     serversFailed:    'تعذّر تحميل قائمة الخوادم.',
     serversNone:      'لا يوجد خادم اختبار لمنطقتك حتى الآن — يمكنك تخطي هذه الخطوة.',
@@ -968,7 +968,7 @@ const I18N = {
     uploadCountError: 'يمكنك رفع 4 لقطات شاشة كحد أقصى.',
     uploadSizeError:  'الملف كبير جدًا (الحد الأقصى 5 ميغابايت). يُرجى ضغطه والمحاولة مرة أخرى.',
 
-    step4Label:            'الخطوة 4 — تفاصيل المشكلة',
+    step4Label:            'الخطوة 3 — تفاصيل المشكلة',
     roleIdLabel:           'Role ID',
     roleIdGuide:           'في الردهة، اضغط على <strong>زر القائمة</strong> أعلى اليمين ← افتح <strong>صفحة ملفك الشخصي</strong> ← اضغط على أيقونة النسخ بجوار <strong>Role ID</strong> أعلى اليمين، ثم الصقه أدناه.',
     roleIdPlaceholder:     'مثال: 1234567890',
@@ -999,7 +999,7 @@ const I18N = {
     issueTimeLabel:        'متى حدثت المشكلة؟',
     issueTimeSub:          'يكفي وقت تقريبي — اتركه فارغًا إذا لم تكن متأكدًا',
 
-    step5Label:       'الخطوة 5 — الإرسال',
+    step5Label:       'الخطوة 4 — الإرسال',
     disclaimerText:   'بالإرسال، فإنك توافق على مشاركة المعلومات الواردة في هذه الصفحة — عنوان IP وبيانات مزوّد الإنترنت، ونتائج قياس الشبكة أعلاه، ومعلومات جهازك، والتفاصيل التي أدخلتها — مع فريق الدعم لدينا للتحقيق في مشكلات الاتصال. وعند الحاجة لحل المشكلة، قد نشارك عنوان IP ونتائج قياس الشبكة ووقت حدوث المشكلة مع مزوّد الإنترنت الخاص بك أو مع مزوّد الخوادم لدينا. لن تُستخدم هذه البيانات لأي غرض آخر.',
     submitBtn:        'أوافق وأرسل',
     measuringBtn:     'جارٍ القياس…',
